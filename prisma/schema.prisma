@@ -1,0 +1,147 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserType {
+  SUPPORT
+  ADMIN
+  PRODUCT_MANAGER
+}
+
+enum TaskStatus {
+  IN_PROGRESS
+  BLOCKED
+  RESOLVED
+  CLOSED
+}
+
+enum TaskPriority {
+  URGENT
+  LOW
+  MEDIUM
+  HIGH
+}
+
+model User {
+  id              String   @id @default(uuid())
+  fullName        String   @unique
+  email           String   @unique
+  password        String
+  passwordConfirm String?
+  userType        UserType
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  assignedTasks         Task[]     @relation("TaskAssignee")
+  createdHandbooks      Handbook[] @relation("HandbookCreator")
+  lastModifiedHandbooks Handbook[] @relation("HandbookModifier")
+}
+
+model TaskType {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  subTaskTypes SubTaskType[]
+  tasks        Task[]
+}
+
+model SubTaskType {
+  id             String       @id @default(uuid())
+  taskTypeId     String
+  name           String
+  description    String?
+  estimatedHours Float        
+  isActive       Boolean      @default(true)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  taskType  TaskType   @relation(fields: [taskTypeId], references: [id])
+  tasks     Task[]
+  handbooks Handbook[]
+
+  @@unique([taskTypeId, name])
+}
+
+model FeatureModule {
+  id          String      @id @default(uuid())
+  moduleName  String      @unique
+  tag         String
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  tasks Task[]
+}
+
+model Task {
+  id             String       @id @default(uuid())
+  description    String?      @db.Text
+  taskTypeId     String          
+  subTaskTypeId  String       
+  moduleId       String       
+  assigneeUserId String       
+  status         TaskStatus   @default(IN_PROGRESS)
+  priority       TaskPriority @default(MEDIUM)
+  dueDate        DateTime
+  completionDate DateTime?    
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  taskType    TaskType      @relation(fields: [taskTypeId], references: [id])
+  subTaskType SubTaskType   @relation(fields: [subTaskTypeId], references: [id])
+  module      FeatureModule @relation(fields: [moduleId], references: [id])
+  assignee    User          @relation("TaskAssignee", fields: [assigneeUserId], references: [id])
+}
+
+model Handbook {
+  id                   String               @id @default(uuid())
+  subTaskTypeId        String               @map("sub_task_type_id")
+  title                String 
+  contentMarkdown      String               @db.Text
+  createdByUserId      String       
+  lastModifiedByUserId String       
+  isPublished          Boolean              @default(true)
+  createdAt            DateTime             @default(now())
+  updatedAt            DateTime             @updatedAt
+
+  subTaskType         SubTaskType           @relation(fields: [subTaskTypeId], references: [id])
+  createdBy           User                  @relation("HandbookCreator", fields: [createdByUserId], references: [id])
+  lastModifiedBy      User                  @relation("HandbookModifier", fields: [lastModifiedByUserId], references: [id])
+  handbookTagMappings HandbookTagMapping[]  
+}
+
+model HandbookTag {
+  id        String    @id @default(uuid())
+  tagName   String    @unique
+  colorHex  String?  
+  createdAt DateTime  @default(now())
+
+  handbookTagMappings HandbookTagMapping[]
+}
+
+model HandbookTagMapping {
+  id         String     @id @default(uuid())
+  handbookId String      
+  tagId      String      
+  createdAt  DateTime   @default(now())
+
+  handbook   Handbook     @relation(fields: [handbookId], references: [id], onDelete: Cascade)
+  tag        HandbookTag  @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@unique([handbookId, tagId])
+}
