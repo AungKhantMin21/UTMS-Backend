@@ -13,12 +13,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum UserType {
-  SUPPORT
-  ADMIN
-  PRODUCT_MANAGER
-}
-
 enum TaskStatus {
   IN_PROGRESS
   BLOCKED
@@ -39,7 +33,6 @@ model User {
   email           String   @unique
   password        String
   passwordConfirm String?
-  userType        UserType
   isActive        Boolean  @default(true)
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
@@ -47,6 +40,29 @@ model User {
   assignedTasks         Task[]     @relation("TaskAssignee")
   createdHandbooks      Handbook[] @relation("HandbookCreator")
   lastModifiedHandbooks Handbook[] @relation("HandbookModifier")
+  userTypeMappings      UserTypeMapping[]
+}
+
+model UserType {
+  id          String   @id @default(uuid())
+  typeName    String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  userTypeMappings UserTypeMapping[]
+}
+
+model UserTypeMapping {
+  id         String   @id @default(uuid())
+  userId     String
+  userTypeId String
+  assignedAt DateTime @default(now())
+
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userType UserType @relation(fields: [userTypeId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, userTypeId])
 }
 
 model TaskType {

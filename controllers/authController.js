@@ -39,12 +39,40 @@ const verifyPassword = async (inputPassword, userPassword) => {
 exports.signup = async (req, res, next) => {
     try {
         const data = createUserSchema.parse(req.body);
-        const newUser = await prisma.user.create({ data });
 
-        sendAuthResponse(newUser.id, res);
+        let userType;
+        if (data.userType === 'ADMIN') {
+            userType = 'ADMIN'
+        } else if (data.userType === 'PRODUCT_MANAGER') {
+            userType = 'PRODUCT_MANAGER'
+        } else if (data.userType === 'SUPPORT') {
+            userType = 'SUPPORT'
+        } else {
+            return next(new AppError(`There's no user type with ${data.userType} name in the system`, 401));
+        }
+
+        const newUser = await prisma.user.create({
+            data: {
+                fullName: data.fullName,
+                email: data.email,
+                password: data.password,
+                passwordConfirm: data.passwordConfirm,
+                userTypeMappings: {
+                    create: {
+                        userType: {
+                            connect: {
+                                typeName: userType
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        sendAuthResponse(newUser, res);
     } catch (err) {
-        next(err);
-    }
+    next(err);
+}
 }
 
 
