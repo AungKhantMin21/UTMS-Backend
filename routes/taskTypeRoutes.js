@@ -10,6 +10,7 @@ router.route('/')
 
 router.route('/:id')
                     .get(authController.protectRoute, taskTypeController.getById)
-                    .put(authController.protectRoute,taskTypeController.updateById);
+                    .put(authController.protectRoute,taskTypeController.updateById)
+                    .delete(authController.protectRoute,taskTypeController.deleteById);
 
 module.exports = router;

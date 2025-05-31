@@ -11,6 +11,14 @@ prisma.$use(async (params, next) => {
     }
   }
 
+  if(params.model === 'TaskType') {
+    if (params.action == 'delete') {
+        // Change action to an update
+        params.action = 'update'
+        params.args.data = { isActive: false }
+      }
+  }
+
   return next(params)
 })
 

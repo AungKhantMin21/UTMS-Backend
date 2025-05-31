@@ -82,3 +82,21 @@ exports.updateById = async (req,res,next) => {
         next(err);
     }
 }
+
+
+exports.deleteById = async (req,res,next) => {
+    try {
+        const deletePost = await prisma.taskType.delete({
+            where: {
+                id: req.params.id
+            }
+        });
+        
+        res.status(204).json({
+            status: 'success',
+            data: null
+        });
+    } catch(err) {
+        next(err);
+    }
+}
