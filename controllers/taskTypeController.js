@@ -43,3 +43,42 @@ exports.getById = async (req,res,next) => {
         next(err);
     }
 }
+
+
+exports.getAll = async (req,res,next) => {
+    try{
+        const allTaskTypes = await prisma.taskType.findMany();
+
+        res.status(200).json({
+            status: "success",
+            count: allTaskTypes.length,
+            data: allTaskTypes
+        });
+    } catch(err) {
+        next(err);
+    }
+}
+
+
+exports.updateById = async (req,res,next) => {
+    try {
+        const data = taskTypeSchema.parse(req.body);
+
+        const updateTaskType = await prisma.taskType.update({
+            where: {
+                id: req.params.id
+            },
+            data: { 
+                name: data.name,
+                ...(data.description !== undefined && { description: data.description })
+            }
+        });
+
+        res.status(201).json({
+            message: "status",
+            data: updateTaskType
+        })
+    } catch(err) {
+        next(err);
+    }
+}
