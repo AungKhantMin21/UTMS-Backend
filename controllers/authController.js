@@ -53,8 +53,8 @@ exports.signup = async (req, res, next) => {
                 userTypeMappings: {
                     create: data.userType.map(typeName => ({
                         userType: {
-                            connect: { 
-                                typeName: typeName 
+                            connect: {
+                                typeName: typeName
                             },
                         },
                     })),
@@ -139,5 +139,15 @@ exports.protectRoute = async (req, res, next) => {
         next();
     } catch (err) {
         next(err);
+    }
+}
+
+
+exports.allowOnly = (role) => {
+    return (req,res,next) => {
+        if (!req.userType.includes(role)) {
+            return next(new AppError(`You do not have permission to perform this action`, 403));
+        }
+        next();
     }
 }
