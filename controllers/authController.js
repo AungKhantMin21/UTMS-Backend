@@ -40,16 +40,9 @@ exports.signup = async (req, res, next) => {
     try {
         const data = createUserSchema.parse(req.body);
 
-        let userType;
-        if (data.userType === 'ADMIN') {
-            userType = 'ADMIN'
-        } else if (data.userType === 'PRODUCT_MANAGER') {
-            userType = 'PRODUCT_MANAGER'
-        } else if (data.userType === 'SUPPORT') {
-            userType = 'SUPPORT'
-        } else {
-            return next(new AppError(`There's no user type with ${data.userType} name in the system`, 401));
-        }
+        data.userType.map(name => {
+            console.log(name)
+        });
 
         const newUser = await prisma.user.create({
             data: {
@@ -58,12 +51,18 @@ exports.signup = async (req, res, next) => {
                 password: data.password,
                 passwordConfirm: data.passwordConfirm,
                 userTypeMappings: {
-                    create: {
+                    create: data.userType.map(typeName => ({
                         userType: {
-                            connect: {
-                                typeName: userType
-                            }
-                        }
+                            connect: { 
+                                typeName: typeName 
+                            },
+                        },
+                    })),
+                }
+            }, include: {
+                userTypeMappings: {
+                    include: {
+                        userType: true
                     }
                 }
             }
@@ -71,8 +70,8 @@ exports.signup = async (req, res, next) => {
 
         sendAuthResponse(newUser, res);
     } catch (err) {
-    next(err);
-}
+        next(err);
+    }
 }
 
 
@@ -120,6 +119,13 @@ exports.protectRoute = async (req, res, next) => {
         const currentUser = await prisma.user.findUnique({
             where: {
                 id: decoded.id
+            },
+            include: {
+                userTypeMappings: {
+                    include: {
+                        userType: true
+                    }
+                }
             }
         });
 
@@ -129,6 +135,7 @@ exports.protectRoute = async (req, res, next) => {
 
         // Grant access to user
         req.user = currentUser;
+        req.userType = currentUser.userTypeMappings.map(ele => ele.userType.typeName);
         next();
     } catch (err) {
         next(err);
