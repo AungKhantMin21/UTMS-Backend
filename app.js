@@ -19,9 +19,11 @@ app.use((req, res, next) => {
 // ROUTES
 const userRoutes = require('./routes/userRoutes');
 const taskTypeRoutes = require('./routes/taskTypeRoutes');
+const featureRoutes = require('./routes/featureRoutes');
 
 app.use('/api/v1/users', userRoutes);
 app.use('/api/v1/task-types', taskTypeRoutes);
+app.use('/api/v1/features', featureRoutes);
 
 // GLOBAL ERROR HANDLING
 app.all('{*splat}', (req,res,next) => {

@@ -1,17 +1,24 @@
-const { taskTypeSchema } = require('../validators/taskTypeValidator');
+const slugify = require('slugify');
+
+const { featureSchema } = require('../validators/featureValidator');
 const prisma = require('../db');
 const AppError = require('../utils/AppError');
 
 
 exports.createTaskType = async (req,res,next) => {
     try {
-        const data = taskTypeSchema.parse(req.body);
+        const data = featureSchema.parse(req.body);
 
-        const newTaskType = await prisma.taskType.create({ data });
+        const newFeature = await prisma.featureModule.create({
+            data: {
+                moduleName: data.moduleName,
+                tag: slugify(data.moduleName, { replacement: '_', lower: true })
+            }
+        });
 
         res.status(201).json({
             message: "status",
-            data: newTaskType
+            data: newFeature
         })
     } catch(err) {
         next(err);
@@ -21,24 +28,20 @@ exports.createTaskType = async (req,res,next) => {
 
 exports.getById = async (req,res,next) => {
     try{
-        const taskType = await prisma.taskType.findUnique({
+        const feature = await prisma.featureModule.findUnique({
             where: {
                 id: req.params.id
-            },
-            include: {
-                subTaskTypes: true
             }
         });
 
-        if(!taskType) {
-            throw new AppError('There\'s no Task Type with this id.', 404);
+        if(!feature) {
+            throw new AppError('There\'s no Feature with this id.', 404);
         }
 
         res.status(200).json({
             status: "success",
-            data: taskType
+            data: feature
         });
-
     } catch (err) {
         next(err);
     }
@@ -47,12 +50,12 @@ exports.getById = async (req,res,next) => {
 
 exports.getAll = async (req,res,next) => {
     try{
-        const allTaskTypes = await prisma.taskType.findMany();
+        const allFeatures = await prisma.featureModule.findMany();
 
         res.status(200).json({
             status: "success",
-            count: allTaskTypes.length,
-            data: allTaskTypes
+            count: allFeatures.length,
+            data: allFeatures
         });
     } catch(err) {
         next(err);
@@ -62,21 +65,21 @@ exports.getAll = async (req,res,next) => {
 
 exports.updateById = async (req,res,next) => {
     try {
-        const data = taskTypeSchema.parse(req.body);
+        const data = featureSchema.parse(req.body);
 
-        const updateTaskType = await prisma.taskType.update({
+        const updateFeature = await prisma.featureModule.update({
             where: {
                 id: req.params.id
             },
             data: { 
-                name: data.name,
-                ...(data.description !== undefined && { description: data.description })
+                moduleName: data.moduleName,
+                tag: slugify(data.moduleName, { replacement: '_', lower: true })
             }
         });
 
         res.status(201).json({
             message: "status",
-            data: updateTaskType
+            data: updateFeature
         })
     } catch(err) {
         next(err);
@@ -86,7 +89,7 @@ exports.updateById = async (req,res,next) => {
 
 exports.deleteById = async (req,res,next) => {
     try {
-        const deleteTaskType = await prisma.taskType.delete({
+        const deleteFeature = await prisma.featureModule.delete({
             where: {
                 id: req.params.id
             }
