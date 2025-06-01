@@ -47,7 +47,11 @@ exports.getById = async (req,res,next) => {
 
 exports.getAll = async (req,res,next) => {
     try{
-        const allTaskTypes = await prisma.taskType.findMany();
+        const allTaskTypes = await prisma.taskType.findMany({
+            include: {
+                subTaskTypes: true
+            }
+        });
 
         res.status(200).json({
             status: "success",
