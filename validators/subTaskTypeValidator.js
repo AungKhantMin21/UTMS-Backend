@@ -7,4 +7,10 @@ const subTaskTypeSchema = z.object({
     taskType: z.string().min(1, 'Task Type Name is required')
 });
 
-module.exports = { subTaskTypeSchema };
+const updateSubTaskTypeSchema = subTaskTypeSchema.pick({
+    name: true,
+    description: true,
+    estimatedHours: true
+});
+
+module.exports = { subTaskTypeSchema, updateSubTaskTypeSchema };

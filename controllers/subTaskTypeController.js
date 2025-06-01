@@ -1,4 +1,4 @@
-const { subTaskTypeSchema } = require('../validators/subTaskTypeValidator');
+const { subTaskTypeSchema, updateSubTaskTypeSchema } = require('../validators/subTaskTypeValidator');
 const prisma = require('../db');
 const AppError = require('../utils/AppError');
 
@@ -30,6 +30,95 @@ exports.createNew = async (req, res, next) => {
             data: newSubTaskType
         })
     } catch (err) {
+        next(err);
+    }
+}
+
+
+exports.getById = async (req,res,next) => {
+    try{
+        const subTaskType = await prisma.subTaskType.findUnique({
+            where: {
+                id: req.params.id
+            },
+            include: {
+                taskType: true
+            }
+        });
+
+        if(!subTaskType) {
+            throw new AppError('There\'s no Sub Task Type with this id.', 404);
+        }
+
+        res.status(200).json({
+            status: "success",
+            data: subTaskType
+        });
+
+    } catch (err) {
+        next(err);
+    }
+}
+
+
+
+exports.getAll = async (req,res,next) => {
+    try{
+        const allSubTaskTypes = await prisma.subTaskType.findMany({
+            include: {
+                taskType: true
+            }
+        });
+
+        res.status(200).json({
+            status: "success",
+            count: allSubTaskTypes.length,
+            data: allSubTaskTypes
+        });
+    } catch(err) {
+        next(err);
+    }
+}
+
+
+exports.updateById = async (req,res,next) => {
+    try {
+        const data = updateSubTaskTypeSchema.parse(req.body);
+
+        const updateSubTaskType = await prisma.subTaskType.update({
+            where: {
+                id: req.params.id
+            },
+            data: { 
+                name: data.name,
+                ...(data.description !== undefined && { description: data.description }),
+                estimatedHours: data.estimatedHours
+            }
+        });
+
+        res.status(201).json({
+            message: "status",
+            data: updateSubTaskType
+        })
+    } catch(err) {
+        next(err);
+    }
+}
+
+
+exports.deleteById = async (req,res,next) => {
+    try {
+        const deleteSubTaskType = await prisma.subTaskType.delete({
+            where: {
+                id: req.params.id
+            }
+        });
+        
+        res.status(204).json({
+            status: 'success',
+            data: null
+        });
+    } catch(err) {
         next(err);
     }
 }

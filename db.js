@@ -11,7 +11,7 @@ prisma.$use(async (params, next) => {
     }
   }
 
-  if(params.model === 'TaskType') {
+  if(params.model === 'TaskType' || params.model === 'SubTaskType') {
     if (params.action == 'delete') {
         // Change action to an update
         params.action = 'update'
