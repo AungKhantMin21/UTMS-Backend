@@ -5,7 +5,7 @@ const prisma = require('../db');
 const AppError = require('../utils/AppError');
 
 
-exports.createTaskType = async (req,res,next) => {
+exports.createNew = async (req,res,next) => {
     try {
         const data = featureSchema.parse(req.body);
 

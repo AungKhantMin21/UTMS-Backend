@@ -21,11 +21,13 @@ const userRoutes = require('./routes/userRoutes');
 const taskTypeRoutes = require('./routes/taskTypeRoutes');
 const featureRoutes = require('./routes/featureRoutes');
 const subTaskTypeRoutes = require('./routes/subTaskTypeRoutes');
+const taskRoutes = require('./routes/taskRoutes');
 
 app.use('/api/v1/users', userRoutes);
 app.use('/api/v1/task-types', taskTypeRoutes);
 app.use('/api/v1/features', featureRoutes);
 app.use('/api/v1/sub-task-types', subTaskTypeRoutes);
+app.use('/api/v1/tasks', taskRoutes);
 
 // GLOBAL ERROR HANDLING
 app.all('{*splat}', (req,res,next) => {
