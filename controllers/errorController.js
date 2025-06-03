@@ -6,15 +6,15 @@ const handleDuplicateErrorDB = (err) => {
 }
 
 const handleValidationError = (err) => {
-    const formattedErrors = err.issues.map(e => (e.message));
-    return new AppError(formattedErrors.join(' and '), 500);
+    const formattedErrors = err.issues.map(e => (`${e.path} field is ${e.message}`));
+    return new AppError(formattedErrors.join(', '), 500);
 }
 
 const sendError = (err,res) => {
     res.status(err.statusCode).json({
         status: err.status,
         message: err.message,
-        detail: err
+        detail: err,
     });
 }
 
