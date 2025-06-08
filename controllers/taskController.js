@@ -72,3 +72,62 @@ exports.createNew = async (req, res, next) => {
         next(err);
     }
 }
+
+
+exports.getById = async (req,res,next) => {
+    try{
+        const task = await prisma.task.findUnique({
+            where: {
+                id: req.params.id
+            },
+            include: {
+                taskType: true,
+                subTaskType: true,
+                module: true,
+                assignee: true
+            }
+        });
+
+        if(!task) {
+            throw new AppError('There\'s no Task with this id.', 404);
+        }
+
+        res.status(200).json({
+            status: "success",
+            data: task
+        });
+
+    } catch (err) {
+        next(err);
+    }
+}
+
+
+exports.getAll = async (req,res,next) => {
+    try{
+        const allTasks = await prisma.task.findMany({
+            include:{
+                taskType: {
+                    select: { name: true}
+                },
+                subTaskType: {
+                    select: { name: true}
+                },
+                module: {
+                    select: { moduleName: true}
+                },
+                assignee: {
+                    select: { fullName: true}
+                }
+            }
+        });
+
+        res.status(200).json({
+            status: "success",
+            count: allTasks.length,
+            data: allTasks
+        });
+    } catch(err) {
+        next(err);
+    }
+}
