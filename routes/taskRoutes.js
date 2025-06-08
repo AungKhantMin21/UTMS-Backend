@@ -9,6 +9,7 @@ router.route('/')
                 .post(authController.protectRoute, taskController.createNew);
 
 router.route('/:id')
-                .get(authController.protectRoute, taskController.getById);
+                .get(authController.protectRoute, taskController.getById)
+                .put(authController.protectRoute, taskController.updateById);;
 
 module.exports = router;

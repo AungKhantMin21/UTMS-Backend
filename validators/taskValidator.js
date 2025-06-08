@@ -8,4 +8,10 @@ const taskSchema = z.object({
     priority: z.string(z.enum(['URGENT', 'LOW', 'MEDIUM', 'HIGH' ]))
 });
 
-module.exports = { taskSchema };
+const updateTaskSchema = z.object({
+    status: z.string(z.enum(['IN_PROGRESS', 'BLOCKED', 'RESOLVED', 'CLOSED'])),
+    priority: z.string(z.enum(['URGENT', 'LOW', 'MEDIUM', 'HIGH' ])),
+    description: z.string().optional()
+})
+
+module.exports = { taskSchema, updateTaskSchema };

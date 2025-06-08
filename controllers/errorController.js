@@ -22,7 +22,6 @@ module.exports = (err,req,res,next) => {
     err.status = err.status || 'error';
     err.statusCode = err.statusCode || 500;
     let error = JSON.parse(JSON.stringify(err));
-
     if(error.name === 'PrismaClientKnownRequestError'){
         // DUPLICATE DATA ERROR 
         if(error.code === 'P2002'){

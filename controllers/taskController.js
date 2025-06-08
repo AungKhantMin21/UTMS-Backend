@@ -1,8 +1,8 @@
-const { taskSchema } = require('../validators/taskValidator');
+const { taskSchema, updateTaskSchema } = require('../validators/taskValidator');
 const prisma = require('../db');
 const AppError = require('../utils/AppError');
 
-const calculateSla = (estHours, priority) => {
+const calculateSla = (startTime, estHours, priority) => {
     const priorityMap = {
         URGENT: 0.5,
         HIGH: 0.8,
@@ -10,7 +10,7 @@ const calculateSla = (estHours, priority) => {
         LOW: 1.2
     };
 
-    return Date.now() + (estHours * priorityMap[priority]) * 60 * 60 * 1000;
+    return startTime + (estHours * priorityMap[priority]) * 60 * 60 * 1000;
 }
 
 exports.createNew = async (req, res, next) => {
@@ -60,7 +60,7 @@ exports.createNew = async (req, res, next) => {
                 moduleId: feature.id,
                 assigneeUserId: req.user.id,
                 priority: data.priority,
-                dueDate: new Date(calculateSla(subTaskType.estimatedHours, data.priority)),
+                dueDate: new Date(calculateSla(Date.now(), subTaskType.estimatedHours, data.priority)),
             }
         });
 
@@ -127,6 +127,67 @@ exports.getAll = async (req,res,next) => {
             count: allTasks.length,
             data: allTasks
         });
+    } catch(err) {
+        next(err);
+    }
+}
+
+
+exports.updateById = async (req,res,next) => {
+    try {
+        const data = updateTaskSchema.parse(req.body);
+
+        const task = await prisma.task.findUnique({
+            where: {
+                id: req.params.id
+            },
+            include: {
+                subTaskType: {
+                    select: {
+                        estimatedHours: true
+                    }
+                }
+            }
+        });
+
+        if(!task){
+            throw new AppError('There\'s no Task with this id.', 404);
+        }
+
+
+        const updateTask = await prisma.task.update({
+            where: {
+                id: req.params.id
+            },
+            data: {
+                ...(data.description !== undefined && data.description !== task.description && { description: data.description }),
+                status: data.status,
+                ...(data.status === 'RESOLVED' && { completionDate: new Date()}),
+                priority: data.priority,
+                ...(data.priority !== task.priority && { 
+                    dueDate: new Date(calculateSla(task.createdAt.getTime(), task.subTaskType.estimatedHours, data.priority))
+                }),
+            },
+            include:{
+                taskType: {
+                    select: { name: true}
+                },
+                subTaskType: {
+                    select: { name: true}
+                },
+                module: {
+                    select: { moduleName: true}
+                },
+                assignee: {
+                    select: { fullName: true}
+                }
+            }
+        });
+
+        res.status(201).json({
+            message: "status",
+            data: updateTask
+        })
     } catch(err) {
         next(err);
     }
